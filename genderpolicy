@@ -1,0 +1,381 @@
+```{r}
+# install.packages("readxl")
+# install.packages("stringr")
+# install.packages("tidyverse",dependencies = TRUE)
+install.packages("lme4", dependencies = TRUE)
+install.packages("Matrix")
+
+library(readxl)
+library(stringr)
+library(lme4)
+```
+
+1. Create the dictionaries
+
+```{r}
+
+bargaining <- c("polici", "coalit", "chang", "outcom", "player", "decis", "shift")
+branches_gov <- c("legislatur", "execut", "branch", "profession", "membership", "legisl")
+bureaucracy <- c("agenc", "bureaucrat", "bureaucraci", "enforce", "regul", "administer", "regulatori")
+campaigns <- c("campaign", "candid", "consult", "voter", "elect", "primari", "presidenti")
+citizen_eng <- c("delib", "particip", "participatori", "citizen", "civic", "deliber", "engag")
+citizenship_nationalid <- c("citizenship", "justic", "religi", "global", "duti", "religion") 
+civil_conflict <- c("conflict", "domest", "intern", "peac", "territori", "threat", "rival")
+congress <- c("congress", "committe", "bill", "legisl", "congression", "hous", "senat")
+corruption <- c("corrupt", "countri", "variabl", "quantit", "cross-nat", "cross-sect", "regress")
+critical_theory <- c("critic", "modern", "conting", "contemporari", "theori", "conceptu", "theoret")
+culture_values <- c("role", "play", "valu", "cultur", "univers", "american", "approach")
+disputes <- c("mediat", "disput", "cost", "formal", "inform", "predict", "incent")
+environmental_politics <- c("environment", "program", "climat", "sustain", "paradigm")
+ethnic_groups <- c("ident", "latino", "ethnic", "identif", "mobil", "attitude", "group")
+federalism <- c("plan", "local", "collabor", "govern", "feder", "intergovernment", "implement")
+finance <- c("exploit", "coordin", "neoliber", "space", "procedur", "constitute", "crisi")
+fiscal_policy <- c("tax", "properti", "redistribut", "fiscal", "revenu", "cost", "spend")
+foreign_policy <- c("militari", "innov", "doctrin", "capabl", "forc", "intellig", "civilian")
+freedom <- c("societi", "democrat", "freedom", "civil", "democraci", "liberti", "liber")
+healthcare <- c("care", "health", "reform", "medic", "law", "adopt", "access")
+history <- c("norm", "indigen", "coloni", "histor", "financi", "right") 
+human_development <- c("right", "incom", "human", "growth", "inequ", "econom", "sanction")
+immigration <- c("immigr", "migrant", "restrict", "skill", "incorpor", "respons", "enforce")
+interest_groups <- c("group", "interest", "lobbi", "activ", "strategi", "advocaci", "organiz")
+international_pol_eco <- c("bank", "invest", "foreign", "monetari", "trade", "finance", "investor")
+interstate_war <- c("terror", "war", "terrorist", "oper", "likelihood", "theori", "novel")
+judicial_pol <- c("judici", "court", "judg", "complianc", "legal", "execut", "decis")
+labor <- c("labor", "market", "busi", "firm", "economi", "union", "global") 
+land <- c("land", "agricultur", "industri", "sector", "economi", "rural", "oil")
+legitimacy <- c("oblig", "liber", "legitimaci", "action", "normat", "affirm", "reason")
+local_urban_pol <- c("communiti", "citi", "urban", "neighborhood", "resid", "local", "civic")
+media <- c("media", "news", "prime", "coverag", "approv", "issu", "messag")
+military_police <- c("offic", "polic", "school", "interview", "review", "staff", "field")
+minority_part <- c("minor", "indian", "behavior", "american", "aggress", "counti", "empower")
+narrative_discourse <- c("narrat", "stori", "young", "victim", "discours", "histori", "symbol")
+nondemocracies_newdemocracies <- c("regim", "authoritarian", "opposit", "leader", "dictat", "rule", "patronag")
+parties <- c("parti", "elector", "faction", "competit", "system", "domin", "ideolog")
+partisanship <- c("partisan", "polar", "elector", "elect", "incumb", "district", "advantage")
+personal_judgment <- c("individu", "good", "judgment", "people", "qualiti", "subject", "experiment")
+political_attitudes <- c("communic", "onlin", "messag", "internet", "inform", "televise", "knowledg")
+political_psychology <- c("emot", "attitud", "survey", "citizen", "sophist", "belief", "psycholog")
+political_theory <- c("moral", "thought", "ethic", "virtu", "life", "human", "philosophi")
+political_trust <- c("institut", "trust", "perform", "democraci", "polit", "across", "level")
+presidential_action <- c("presid", "frame", "presidenti", "agenda", "issu", "press", "speech")
+public_goods_services <- c("board", "servic", "provis", "deliveri", "educ", "voluntari", "contact")
+public_opinion <- c("public", "opinion", "crime", "mass", "fear", "poll", "assess")
+race_gender <- c("women", "gender", "black", "racial", "white", "poverti", "race")
+recruitment <- c("environ", "paper", "recruit", "appeal", "select", "cohes", "behavior")
+regional_politics <- c("environ", "paper", "recruit", "appeal", "select", "cohes", "behavior")
+representation <- c("represent", "constitu", "style", "repres", "attribut", "home", "member")
+repression_violence <- c("violenc", "ethnic", "insurg", "civil", "repress", "violent", "war")
+security <- c("secur", "transnat", "migrat", "border", "brazil", "physic", "boundary")
+social_movements <- c("movement", "network", "activist", "organ", "social", "protest", "mobil")
+spending <- c("welfar", "fund", "safeti", "health", "risk", "spend", "program")
+state_capacity <- c("south", "korea", "africa", "decentr", "african", "taiwan", "consolid")
+state_pol <- c("state", "unit", "adopt", "governor", "feder", "variabl", "determin")
+technological_capacity <- c("china", "chines", "technolog", "water", "aid", "foreign", "enterpris")
+terrorism <- c("attack", "model", "terrorist", "target", "threat", "game", "measur")
+transitions <- c("allianc", "transit", "communist", "europ", "post-communist", "eastern", "transform")
+voting <- c("vote", "voter", "choic", "turnout", "elect", "elector", "chapter")
+
+```
+
+2. Apply the dictionary
+
+```{r}
+# this command makes one string out of all the words in one dictionary, 
+# separated by "|". R will later interpret "|" as an "or"-condition, 
+# and will try to match the string to any of the words in the library
+
+bargaining_dict_pattern <- paste(bargaining,
+                              collapse = "|")
+branches_gov_dict_pattern <- paste(branches_gov,
+                              collapse = "|")
+bureaucracy_dict_pattern <- paste(bureaucracy,
+                              collapse = "|")
+campaigns_dict_pattern <- paste(campaigns,
+                              collapse = "|")
+citizen_eng_dict_pattern <- paste(citizen_eng,
+                              collapse = "|")
+citizenship_nationalid_dict_pattern <- paste(citizenship_nationalid,
+                              collapse = "|")
+civil_conflict_dict_pattern <- paste(civil_conflict,
+                              collapse = "|")
+congress_dict_pattern <- paste(congress,
+                              collapse = "|")
+corruption_dict_pattern <- paste(corruption,
+                              collapse = "|")
+critical_theory_dict_pattern <- paste(critical_theory,
+                              collapse = "|")
+culture_values_dict_pattern <- paste(culture_values,
+                              collapse = "|")
+disputes_dict_pattern <- paste(disputes,
+                              collapse = "|")
+environmental_politics_dict_pattern <- paste(environmental_politics,
+                              collapse = "|")
+ethnic_groups_dict_pattern <- paste(ethnic_groups,
+                              collapse = "|")
+federalism_dict_pattern <- paste(federalism,
+                              collapse = "|")
+finance_dict_pattern <- paste(finance,
+                              collapse = "|")
+fiscal_policy_dict_pattern <- paste(fiscal_policy,
+                              collapse = "|")
+foreign_policy_dict_pattern <- paste(foreign_policy,
+                              collapse = "|")
+freedom_dict_pattern <- paste(freedom,
+                              collapse = "|")
+healthcare_dict_pattern <- paste(healthcare,
+                              collapse = "|")
+history_dict_pattern <- paste(history,
+                              collapse = "|")
+human_development_dict_pattern <- paste(human_development,
+                              collapse = "|")
+immigration_dict_pattern <- paste(immigration,
+                              collapse = "|")
+interest_groups_dict_pattern <- paste(interest_groups,
+                              collapse = "|")
+international_pol_eco_dict_pattern <- paste(international_pol_eco,
+                              collapse = "|")
+interstate_war_dict_pattern <- paste(interstate_war,
+                              collapse = "|")
+judicial_pol_dict_pattern <- paste(judicial_pol,
+                              collapse = "|")
+labor_dict_pattern <- paste(labor,
+                              collapse = "|")
+land_dict_pattern <- paste(land,
+                              collapse = "|")
+legitimacy_dict_pattern <- paste(legitimacy,
+                              collapse = "|")
+local_urban_pol_dict_pattern <- paste(local_urban_pol,
+                              collapse = "|")
+media_dict_pattern <- paste(media,
+                              collapse = "|")
+military_police_dict_pattern <- paste(military_police,
+                              collapse = "|")
+minority_part_dict_pattern <- paste(minority_part,
+                              collapse = "|")
+narrative_discourse_dict_pattern <- paste(narrative_discourse,
+                              collapse = "|")
+nondemocracies_newdemocracies_dict_pattern <- paste(nondemocracies_newdemocracies,
+                              collapse = "|")
+parties_dict_pattern <- paste(parties,
+                              collapse = "|")
+partisanship_dict_pattern <- paste(partisanship,
+                              collapse = "|")
+personal_judgment_dict_pattern <- paste(personal_judgment,
+                              collapse = "|")
+political_attitudes_dict_pattern <- paste(political_attitudes,
+                              collapse = "|")
+political_psychology_dict_pattern <- paste(political_psychology,
+                              collapse = "|")
+political_theory_dict_pattern <- paste(political_theory,
+                              collapse = "|")
+political_trust_dict_pattern <- paste(political_trust,
+                              collapse = "|")
+presidential_action_dict_pattern <- paste(presidential_action,
+                              collapse = "|")
+public_goods_services_dict_pattern <- paste(public_goods_services,
+                              collapse = "|")
+public_opinion_dict_pattern <- paste(public_opinion,
+                              collapse = "|")
+race_gender_dict_pattern <- paste(race_gender,
+                              collapse = "|")
+recruitment_dict_pattern <- paste(recruitment,
+                              collapse = "|")
+regional_politics_dict_pattern <- paste(regional_politics,
+                              collapse = "|")
+representation_dict_pattern <- paste(representation,
+                              collapse = "|")
+repression_violence_dict_pattern <- paste(repression_violence,
+                              collapse = "|")
+security_dict_pattern <- paste(security,
+                              collapse = "|")
+social_movements_dict_pattern <- paste(social_movements,
+                              collapse = "|")
+spending_dict_pattern <- paste(spending,
+                              collapse = "|")
+state_capacity_dict_pattern <- paste(state_capacity,
+                              collapse = "|")
+state_pol_dict_pattern <- paste(state_pol,
+                              collapse = "|")
+technological_capacity_dict_pattern <- paste(technological_capacity,
+                              collapse = "|")
+terrorism_dict_pattern <- paste(terrorism,
+                              collapse = "|")
+transitions_dict_pattern <- paste(transitions,
+                              collapse = "|")
+voting_dict_pattern <- paste(voting,
+                              collapse = "|")
+
+
+## Apply the dictionary
+
+# str_count counts the number of times any of the dictionary words appear
+# in an abstract and return the respective number
+
+str(database_journals$abstract)
+
+database_journals$bargaining <- str_count(database_journals$abstract,
+                               bargaining_dict_pattern)
+database_journals$branches_of_government <- str_count(database_journals$abstract,
+                               branches_gov_dict_pattern)
+database_journals$bureaucracy <- str_count(database_journals$abstract,
+                              bureaucracy_dict_pattern)
+database_journals$campaigns <- str_count(database_journals$abstract,
+                              campaigns_dict_pattern)
+database_journals$citizen_engagement <- str_count(database_journals$abstract,
+                              citizen_eng_dict_pattern)
+database_journals$citizenship_national_identity <- str_count(database_journals$abstract,
+                              citizenship_nationalid_dict_pattern)
+database_journals$civil_conflict <- str_count(database_journals$abstract,
+                              civil_conflict_dict_pattern)
+database_journals$congress <- str_count(database_journals$abstract,
+                              congress_dict_pattern)
+database_journals$corruption <- str_count(database_journals$abstract,
+                              corruption_dict_pattern)
+database_journals$critical_theory <- str_count(database_journals$abstract,
+                              critical_theory_dict_pattern)
+database_journals$culture_values <- str_count(database_journals$abstract,
+                              culture_values_dict_pattern)
+database_journals$disputes <- str_count(database_journals$abstract,
+                              disputes_dict_pattern)
+database_journals$environmental_politics <- str_count(database_journals$abstract,
+                              environmental_politics_dict_pattern)
+database_journals$ethnic_groups <- str_count(database_journals$abstract,
+                              ethnic_groups_dict_pattern)
+database_journals$federalism <- str_count(database_journals$abstract,
+                              federalism_dict_pattern)
+database_journals$finance <- str_count(database_journals$abstract,
+                              finance_dict_pattern)
+database_journals$fiscal_policy <- str_count(database_journals$abstract,
+                              fiscal_policy_dict_pattern)
+database_journals$foreign_policy <- str_count(database_journals$abstract,
+                              foreign_policy_dict_pattern)
+database_journals$freedom <- str_count(database_journals$abstract,
+                              freedom_dict_pattern)
+database_journals$healthcare <- str_count(database_journals$abstract,
+                              healthcare_dict_pattern)
+database_journals$history <- str_count(database_journals$abstract,
+                              history_dict_pattern)
+database_journals$human_development <- str_count(database_journals$abstract,
+                              human_development_dict_pattern)
+database_journals$immigration <- str_count(database_journals$abstract,
+                              immigration_dict_pattern)
+database_journals$interest_groups <- str_count(database_journals$abstract,
+                              interest_groups_dict_pattern)
+database_journals$international_political_economy <- str_count(database_journals$abstract,
+                              international_pol_eco_dict_pattern)
+database_journals$interstate_war <- str_count(database_journals$abstract,
+                              interstate_war_dict_pattern)
+database_journals$judicial_politics <- str_count(database_journals$abstract,
+                              judicial_pol_dict_pattern)
+database_journals$labor <- str_count(database_journals$abstract,
+                              labor_dict_pattern)
+database_journals$land <- str_count(database_journals$abstract,
+                              land_dict_pattern)
+database_journals$legitimacy <- str_count(database_journals$abstract,
+                              legitimacy_dict_pattern)
+database_journals$local_urban_politics <- str_count(database_journals$abstract,
+                              local_urban_pol_dict_pattern)
+database_journals$media <- str_count(database_journals$abstract,
+                              media_dict_pattern)
+database_journals$military_and_police <- str_count(database_journals$abstract,
+                              military_police_dict_pattern)
+database_journals$minority_participation <- str_count(database_journals$abstract,
+                              minority_part_dict_pattern)
+database_journals$narrative_discourse <- str_count(database_journals$abstract,
+                              narrative_discourse_dict_pattern)
+database_journals$nondemocracies_newdemocracies <- str_count(database_journals$abstract,
+                              nondemocracies_newdemocracies_dict_pattern)
+database_journals$parties <- str_count(database_journals$abstract,
+                              parties_dict_pattern)
+database_journals$partisanship <- str_count(database_journals$abstract,
+                              partisanship_dict_pattern)
+database_journals$personal_judgment <- str_count(database_journals$abstract,
+                              personal_judgment_dict_pattern)
+database_journals$political_attitudes <- str_count(database_journals$abstract,
+                              political_attitudes_dict_pattern)
+database_journals$political_psychology <- str_count(database_journals$abstract,
+                              political_psychology_dict_pattern)
+database_journals$political_theory <- str_count(database_journals$abstract,
+                              political_theory_dict_pattern)
+database_journals$political_trust <- str_count(database_journals$abstract,
+                              political_trust_dict_pattern)
+database_journals$presidential_action <- str_count(database_journals$abstract,
+                              presidential_action_dict_pattern)
+database_journals$public_goods_services <- str_count(database_journals$abstract,
+                              public_goods_services_dict_pattern)
+database_journals$public_opinion <- str_count(database_journals$abstract,
+                              public_opinion_dict_pattern)
+database_journals$race_gender <- str_count(database_journals$abstract,
+                              race_gender_dict_pattern)
+database_journals$recruitment <- str_count(database_journals$abstract,
+                              recruitment_dict_pattern)
+database_journals$regional_politics <- str_count(database_journals$abstract,
+                              regional_politics_dict_pattern)
+database_journals$representation <- str_count(database_journals$abstract,
+                              representation_dict_pattern)
+database_journals$repression_violence <- str_count(database_journals$abstract,
+                              repression_violence_dict_pattern)
+database_journals$security <- str_count(database_journals$abstract,
+                              security_dict_pattern)
+database_journals$social_movements <- str_count(database_journals$abstract,
+                              social_movements_dict_pattern)
+database_journals$spending <- str_count(database_journals$abstract,
+                              spending_dict_pattern)
+database_journals$state_capacity <- str_count(database_journals$abstract,
+                              state_capacity_dict_pattern)
+database_journals$state_politics <- str_count(database_journals$abstract,
+                              state_pol_dict_pattern)
+database_journals$technological_capacity <- str_count(database_journals$abstract,
+                              technological_capacity_dict_pattern)
+database_journals$terrorism <- str_count(database_journals$abstract,
+                              terrorism_dict_pattern)
+database_journals$transitions <- str_count(database_journals$abstract,
+                              transitions_dict_pattern)
+database_journals$voting <- str_count(database_journals$abstract,
+                              voting_dict_pattern)
+
+
+# now store the number of times, words of
+# the respective dictionary appear in the abstract
+
+```
+
+4. store the result
+
+```{r}
+write.csv(database_journals, file ="database_classified_topics.csv",
+          row.names = F)
+```
+
+5. Run regression analysis
+
+```{r}
+
+# regression on 
+# likelihood of submitting
+
+reg_submission <- lmer(data = database_APSAsurvey, submit ~ masculine + feminine + neutral + (1 | person))
+
+summary(reg_submission)
+     
+# regression on
+# likelihood of publishing
+
+
+```
+
+
+```{r}
+
+# regression on 
+# likelihood of submitting
+
+database_APSAsurvey$submit <- as.numeric(as.character(database_APSAsurvey$submit))
+
+lmer(data = database_APSAsurvey, database_APSAsurvey$submit ~ database_APSAsurvey$masculine + database_APSAsurvey$feminine + database_APSAsurvey$neutral + (1 | database_APSAsurvey$person), REML = FALSE)
+
+# regression on
+# likelihood of publishing
+
+
+```
