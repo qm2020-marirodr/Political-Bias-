@@ -306,3 +306,237 @@ cex = 0.9, pos = c(1,2))
 
 
 ```
+
+5. Influential outliers - Cooks distance
+
+```{r}
+#reg2
+plot(cooks.distance(reg2), pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 5/length(database$p_women_speeches), col="red")  
+text(x=1:length(cooks.distance(reg2))+1, y=cooks.distance(reg2), labels=ifelse(cooks.distance(reg2)>5/length(database$p_women_speeches), names(cooks.distance(reg2)),""), col="red", pos=2)
+
+influential1 <- as.numeric(names(cooks.distance(reg2)[(cooks.distance(reg2) > (5/length(database$p_women_speeches)))])) #row numbers
+
+#reg5
+
+plot(cooks.distance(reg5), pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 5/length(database$p_women_speeches), col="red")  
+text(x=1:length(cooks.distance(reg5))+1, y=cooks.distance(reg5), labels=ifelse(cooks.distance(reg5)>5/length(database$p_women_speeches), names(cooks.distance(reg5)),""), col="red", pos=2)
+
+influential2 <- as.numeric(names(cooks.distance(reg5)[(cooks.distance(reg5) > (5/length(database$p_women_speeches)))])) #row numbers
+
+#reg6
+
+plot(cooks.distance(reg6), pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 5/length(database$p_women_speeches), col="red")  
+text(x=1:length(cooks.distance(reg6))+1, y=cooks.distance(reg6), labels=ifelse(cooks.distance(reg6)>5/length(database$p_women_speeches), names(cooks.distance(reg6)),""), col="red", pos=2)
+
+influential3 <- as.numeric(names(cooks.distance(reg6)[(cooks.distance(reg6) > (5/length(database$p_women_speeches)))])) #row numbers
+
+#reg8
+
+plot(cooks.distance(reg8), pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 5/length(database$lag_p_women_speeches), col="red")  
+text(x=1:length(cooks.distance(reg8))+1, y=cooks.distance(reg8), labels=ifelse(cooks.distance(reg8)>5/length(database$lag_p_women_speeches), names(cooks.distance(reg8)),""), col="red", pos=2)
+
+influential4 <- as.numeric(names(cooks.distance(reg8)[(cooks.distance(reg8) > (5/length(database$lag_p_women_speeches)))])) #row numbers
+
+#reg9
+
+plot(cooks.distance(reg9), pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 5/length(database$lag_p_women_speeches), col="red")  
+text(x=1:length(cooks.distance(reg9))+1, y=cooks.distance(reg9), labels=ifelse(cooks.distance(reg9)>5/length(database$lag_p_women_speeches), names(cooks.distance(reg9)),""), col="red", pos=2)
+
+influential5 <- as.numeric(names(cooks.distance(reg9)[(cooks.distance(reg9) > (5/length(database$lag_p_women_speeches)))])) #row numbers
+
+#reg10
+
+plot(cooks.distance(reg10), pch="*", cex=2, main="Influential Obs by Cooks distance") 
+abline(h = 5/length(database$lag_p_women_speeches), col="red")  
+text(x=1:length(cooks.distance(reg10))+1, y=cooks.distance(reg10), labels=ifelse(cooks.distance(reg10)>5/length(database$lag_p_women_speeches), names(cooks.distance(reg10)),""), col="red", pos=2)
+
+influential6 <- as.numeric(names(cooks.distance(reg10)[(cooks.distance(reg10) > (5/length(database$lag_p_women_speeches)))])) #row numbers
+
+
+```
+
+6. Robustness - Remove influential outliers and clustered SE
+
+
+```{r}
+
+# REMOVE OUTLIERS
+
+#Reg2
+data_outlier <- database[-influential1,]
+reg2_outlier <- lm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+          data = data_outlier)
+
+summary(reg2_outlier) #results hold!
+ 
+plot(data_outlier$p_women_speeches, 
+     reg2_outlier$residuals,
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot 1 for Parliamentary speeches on women policies",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies",
+xlim = c(0.02, 0.04),
+ylim = c(-0.04, 0.04)
+)
+abline(0, 0)
+
+#Reg5
+data_outlier2 <- database[-influential2,] 
+reg5_outlier <- lm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country),
+          data = data_outlier2)
+
+summary(reg5_outlier) #results hold! 
+ 
+plot(data_outlier2$p_women_speeches, 
+     reg5_outlier$residuals,
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot 2 for Parliamentary speeches on women policies",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies",
+xlim = c(0.02, 0.04),
+ylim = c(-0.04, 0.04)
+)
+abline(0, 0)
+
+#Reg6
+data_outlier3 <- database[-influential3,] 
+reg6_outlier <- lm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country) + factor(year),
+          data = data_outlier3)
+
+summary(reg6_outlier) #results hold!
+ 
+plot(data_outlier3$p_women_speeches, 
+     reg6_outlier$residuals,
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot 3 for Parliamentary speeches on women policies",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies",
+xlim = c(0.02, 0.04),
+ylim = c(-0.04, 0.04)
+)
+abline(0, 0)
+
+
+#Reg8
+data_outlier4 <- database[-influential4,] 
+reg8_outlier <- lm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+          data = data_outlier4)
+
+summary(reg8_outlier) #results hold!
+ 
+
+#Reg9
+data_outlier5 <- database[-influential5,] 
+reg9_outlier <- lm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country),
+          data = data_outlier5)
+
+summary(reg9_outlier) #results hold!
+
+
+#Reg10
+data_outlier6 <- database[-influential6,] 
+reg10_outlier <- lm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country) + factor(year),
+          data = data_outlier6)
+
+summary(reg10_outlier) #results hold!
+
+
+# Cluster SE for countries
+# Results are statistically insignificant!
+
+  #Reg2
+  clusterSE_reg2 <- lm_robust(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+                              clusters = country,
+            data = database)
+  summary(clusterSE_reg2)
+  
+  #Reg5
+  clusterSE_reg5 <- lm_robust(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+                              clusters = country,
+                              fixed_effects = ~country,
+            data = database)
+  summary(clusterSE_reg5)
+  
+  #Reg6 
+  #only results that remain statistically significant
+  clusterSE_reg6 <- lm_robust(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+                              clusters = country,
+                              fixed_effects = ~country + ~year,
+            data = database)
+  summary(clusterSE_reg6)
+  
+  #Reg8
+  clusterSE_reg8 <- lm_robust(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+                              clusters = country,
+            data = database)
+  summary(clusterSE_reg8)
+  
+  #Reg9
+    clusterSE_reg9 <- lm_robust(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+                              clusters = country,
+                              fixed_effects = ~country,
+            data = database)
+  summary(clusterSE_reg9)
+  
+  #Reg10
+  #only results that remain statistically significant
+    clusterSE_reg10 <- lm_robust(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+                              clusters = country,
+                              fixed_effects = ~country + ~year,
+            data = database)
+  summary(clusterSE_reg10)
+
+```
+
+7. Regression Tables
+
+```{r}
+
+library(stargazer)
+
+stargazer(reg2)
+
+stargazer(list(
+       reg2,
+       reg5,
+       reg7,
+       reg8,
+       reg9,
+       reg10),
+  out = "table_models.tex",
+  title = "Regression Results",
+  notes = "Standard Errors (SEs) are indicated in parentheses",
+  intercept.bottom = TRUE,
+  dep.var.labels = "Parliamentary speeches on women policies (per year/country)",
+  covariate.labels = c(
+    "Share of speeches on women policies",
+    "Share of speeches on women policies lagged",
+    "Share of female MPs",
+    "GDP per capita",
+    "Seat share of left parties",
+    "Denmark",
+    "Germany",
+    "Netherlands",
+    "Spain",
+    "Sweden",
+    "United Kingdown"
+     ))
+
+
+
+
+
+```
+
+
