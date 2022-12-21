@@ -1,0 +1,308 @@
+---
+title: "Term paper HR"
+output: html_document
+date: "2022-12-17"
+---
+
+```{r}
+p_needed <-
+  c("readxl",
+    "readr",
+    "MASS",
+    "foreign",
+    "stargazer",
+    "calibrate",
+    "haven",
+    "Rcpp",
+    "plyr",
+    "plm",
+    "viridis",
+    "estimatr"
+    )
+
+
+packages <- rownames(installed.packages())
+p_to_install <- p_needed[!(p_needed %in% packages)]
+if (length(p_to_install) > 0) {
+  install.packages(p_to_install)
+}
+
+library(readxl)
+library(readr)
+library(haven)
+library(Rcpp)
+library(plyr)
+library(plm)
+library(estimatr)
+
+# This is an option for stargazer tables
+# It automatically adapts the output to html or latex,
+# depending on whether we want a html or pdf file
+stargazer_opt <- ifelse(knitr::is_latex_output(), "latex", "html")
+
+```
+
+1. Distribution DV 
+
+```{r}
+pdf(file="distribution1.pdf")
+hist(database$p_women_speeches,
+     xlim=c(0,0.1), 
+     ylim= c(0,30),
+     xlab= "Speeches on women policies (in percentage)",
+     col=adjustcolor("aquamarine2", alpha= 0.6),
+     main="",
+     border= "aquamarine4",
+     breaks=12
+  )
+     
+
+grid(
+  nx = NULL, 
+  col = "gray80", 
+  lty = "dotted", 
+  lwd = 1, 
+  equilogs = F)
+
+abline(
+  v= median(database$p_women_speeches), 
+  col = adjustcolor("aquamarine4", alpha = 0.8), 
+  lty = "dashed", 
+  lwd = 2)
+
+abline(
+  v= mean(database$p_women_speeches), 
+  col = adjustcolor("aquamarine4", alpha = 0.8), 
+  lty = "solid", 
+  lwd = 2)
+
+legend(
+  "topright",
+  legend = c("Median", "Mean"),
+  col = c(adjustcolor("aquamarine4", alpha = 1), adjustcolor("aquamarine4", alpha = 1)), 
+  lty = c("dashed", "solid"),
+  lwd = c(2, 2),
+  bty = "n")
+
+dev.off()
+
+
+```
+
+3. Model specification
+
+```{r}
+
+# OLS WITH ONE IV
+
+reg1 <- lm(p_women_speeches ~ p_women_parliament,
+          data = database)
+summary(reg1)
+
+# OLS WITH ALL CONTROL VARIABLES
+
+reg2 <- lm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+          data = database)
+summary(reg2)
+
+# FIXED EFFECT MODEL
+# DUMMY VARIABLES COUNTRY AND YEAR
+
+reg5 <- lm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country),
+          data = database)
+summary(reg5)
+
+reg6 <- lm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country) + factor(year),
+          data = database)
+summary(reg6)
+
+# FIXED EFFECT MODEL
+# WHITIN ESTIMATOR
+
+reg7 <- plm(p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country), index = "year",
+          data = database)
+summary(reg7)
+
+# MODELS WITH LAGGED DV 
+
+#OLS with all control variables
+reg8 <- lm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left,
+          data = database)
+summary(reg8)
+
+
+#OLS with fixed effect dummy variable country 
+## Results are not statistically significant for main IV
+reg9 <- lm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country),
+        data = database)
+summary(reg9)
+
+
+#OLS with fixed effect dummy variable country and year
+reg10 <- lm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country) + factor(year),
+          data = database)
+summary(reg10)
+
+
+#OLS with fixed effect whitin estimator
+reg11 <- plm(lag_p_women_speeches ~ p_women_parliament + gdp_per_capita + p_left + factor(country), index = "year",
+          data = database)
+summary(reg11)
+
+
+```
+
+
+4. Residuals
+
+```{r}
+
+#Reg2
+plot(database$p_women_speeches, 
+     reg2$residuals,
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot for Parliamentary speeches on women policies (in %)",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies (in %)",
+xlim = c(0, 0.12),
+ylim = c(-0.06, 0.06)
+)
+abline(0, 0)
+
+text(database$p_women_speeches [which.max(database$p_women_speeches)],
+reg2$residuals[which.max(database$p_women_speeches)],
+labels = c(database$country[which.max(database$p_women_speeches)], database$year[which.max(database$p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+text(database$p_women_speeches [which.min(database$p_women_speeches)],
+reg2$residuals[which.min(database$p_women_speeches)],
+labels = c(database$country[which.min(database$p_women_speeches)], database$year[which.min(database$p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+#Reg5
+plot(database$p_women_speeches, 
+     reg5$residuals,
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Parliamentary speeches on women policies (in %)",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies (in %)",
+xlim = c(0, 0.12),
+ylim = c(-0.06, 0.06)
+)
+abline(0, 0)
+
+text(database$p_women_speeches [which.max(database$p_women_speeches)],
+reg5$residuals[which.max(database$p_women_speeches)],
+labels = c(database$country[which.max(database$p_women_speeches)], database$year[which.max(database$p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+text(database$p_women_speeches [which.min(database$p_women_speeches)],
+reg5$residuals[which.min(database$p_women_speeches)],
+labels = c(database$country[which.min(database$p_women_speeches)], database$year[which.min(database$p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+#Reg6
+plot(database$p_women_speeches, 
+     reg6$residuals,
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residuals Plot for Parliamentary speeches on women policies (in %)",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies (in %)",
+xlim = c(0, 0.12),
+ylim = c(-0.06, 0.06)
+)
+abline(0, 0)
+
+text(database$p_women_speeches [which.max(database$p_women_speeches)],
+reg6$residuals[which.max(database$p_women_speeches)],
+labels = c(database$country[which.max(database$p_women_speeches)], database$year[which.max(database$p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+text(database$p_women_speeches [which.min(database$p_women_speeches)],
+reg6$residuals[which.min(database$p_women_speeches)],
+labels = c(database$country[which.min(database$p_women_speeches)], database$year[which.min(database$p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+#Reg8
+
+plot(database$lag_p_women_speeches, 
+     reg8$residuals[1:length(database$lag_p_women_speeches)],
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot for Parliamentary speeches on women policies (in %)",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies (in %)",
+xlim = c(0, 0.12),
+ylim = c(-0.06, 0.06)
+)
+abline(0, 0)
+
+text(database$lag_p_women_speeches [which.max(database$lag_p_women_speeches)],
+reg8$residuals[which.max(database$lag_p_women_speeches)],
+labels = c(database$country[which.max(database$lag_p_women_speeches)], database$year[which.max(database$lag_p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+text(database$lag_p_women_speeches [which.min(database$lag_p_women_speeches)],
+reg8$residuals[which.min(database$lag_p_women_speeches)],
+labels = c(database$country[which.min(database$lag_p_women_speeches)], database$year[which.min(database$lag_p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+#Reg9
+
+plot(database$lag_p_women_speeches, 
+     reg9$residuals[1:length(database$lag_p_women_speeches)],
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot for Parliamentary speeches on women policies (in %)",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies (in %)",
+xlim = c(0, 0.12),
+ylim = c(-0.06, 0.06)
+)
+abline(0, 0)
+
+text(database$lag_p_women_speeches [which.max(database$lag_p_women_speeches)],
+reg9$residuals[which.max(database$lag_p_women_speeches)],
+labels = c(database$country[which.max(database$lag_p_women_speeches)], database$year[which.max(database$lag_p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+text(database$lag_p_women_speeches [which.min(database$lag_p_women_speeches)],
+reg9$residuals[which.min(database$lag_p_women_speeches)],
+labels = c(database$country[which.min(database$lag_p_women_speeches)], database$year[which.min(database$lag_p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+#Reg10
+
+plot(database$lag_p_women_speeches, 
+     reg10$residuals[1:length(database$lag_p_women_speeches)],
+bty = "n",
+las = 1,
+pch = 16, col = adjustcolor("aquamarine2", alpha = 0.7), cex = 1.2,
+main = "Residual Plot for Parliamentary speeches on women policies (in %)",
+ylab = "Residuals",
+xlab = "Parliamentary speeches on women policies (in %)",
+xlim = c(0, 0.12),
+ylim = c(-0.06, 0.06)
+)
+abline(0, 0)
+
+text(database$lag_p_women_speeches [which.max(database$lag_p_women_speeches)],
+reg10$residuals[which.max(database$lag_p_women_speeches)],
+labels = c(database$country[which.max(database$lag_p_women_speeches)], database$year[which.max(database$lag_p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+text(database$lag_p_women_speeches [which.min(database$lag_p_women_speeches)],
+reg10$residuals[which.min(database$lag_p_women_speeches)],
+labels = c(database$country[which.min(database$lag_p_women_speeches)], database$year[which.min(database$lag_p_women_speeches)]),
+cex = 0.9, pos = c(1,2))
+
+
+```
